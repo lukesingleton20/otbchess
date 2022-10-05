@@ -1,48 +1,50 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
 
-# Define UI for application that draws a histogram
+library(shiny)
+library(shinyjs)
+library(shinythemes)
+library(DBI)
+library(RMariaDB)
+
+# Source Modules
+source("login.R")
+
+# Define UI
 ui <- fluidPage(
 
-    # Application title
-    titlePanel("Old Faithful Geyser Data"),
-
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
+  useShinyjs(),
+  
+  div(
+    class = "container",
+    
+    column(
+      width = 12,
+      
+      login_ui(id = "login", title = "Please login"),
+      uiOutput(outputId = "dashboard")
+      
     )
+  )
 )
 
 # Define server logic required to draw a histogram
-server <- function(input, output) {
+server <- function(input, output, session) {
 
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
+  check_password <- callModule(
+    module = validate_password,
+    id = "login"
+  )
 
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
+  output$dashboard <- renderUI({
+    
+    req(check_password())
+    
+    div(
+      class = "bg-success",
+      id = "success",
+      h4("Acces confirmed!"),
+      p("You are now securely connected to the otbchess database.")
+    )
+  })
 }
 
 # Run the application 
